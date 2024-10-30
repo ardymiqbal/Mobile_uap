@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import 'package:tes1/app/modules/home/views/profile_page.dart';
-
+import 'package:tes1/app/modules/http_screen/views/http_view.dart';
 
 // Home Page with BottomNavigationBar and various sections
 class HomePage extends StatelessWidget {
@@ -14,6 +14,7 @@ class HomePage extends StatelessWidget {
     Center(child: Text('Search Page')), // Placeholder for Search Page
     Center(child: Text('Favorites Page')), // Placeholder for Favorites Page
     ProfilePage(), // Profile Page with Image Picker
+    HttpView(),
   ];
 
   @override
@@ -27,12 +28,15 @@ class HomePage extends StatelessWidget {
             Text('WELCOME TO APP STREAMING FILM'),
             IconButton(
               icon: Icon(Icons.notifications),
-              onPressed: () {},
+              onPressed: () {
+                Get.to(() => HttpView());
+              },
             ),
           ],
         ),
       ),
-      body: Obx(() => _pages[homeController.currentIndex.value]), // Observe page index
+      body: Obx(() =>
+          _pages[homeController.currentIndex.value]), // Observe page index
       bottomNavigationBar: Obx(() => BottomNavigationBar(
             backgroundColor: Colors.black87,
             selectedItemColor: Colors.orange,
@@ -41,10 +45,16 @@ class HomePage extends StatelessWidget {
             onTap: homeController.changeTab, // Change tab on tap
             items: [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(icon: Icon(Icons.play_circle_filled), label: 'Play'),
-              BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-              BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favorites'),
-              BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.play_circle_filled), label: 'Play'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.search), label: 'Search'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.favorite), label: 'Favorites'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.person), label: 'Profile'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.notifications), label: 'Webview'),
             ],
           )),
     );
@@ -75,7 +85,8 @@ class HomeContent extends StatelessWidget {
             height: 250,
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/arcane.jpg'), // Use AssetImage for local asset
+                image: AssetImage(
+                    'assets/arcane.jpg'), // Use AssetImage for local asset
                 fit: BoxFit.cover,
               ),
               borderRadius: BorderRadius.circular(16),
@@ -208,9 +219,9 @@ class HomeContent extends StatelessWidget {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                castThumbnail('Character 1', 'https://example.com/character1.jpg'),
-                castThumbnail('Character 2', 'https://example.com/character2.jpg'),
-                castThumbnail('Character 3', 'https://example.com/character3.jpg'),
+                castThumbnail('Joquin Poeniex', 'assets/joker-char.jpg'),
+                castThumbnail('brie larson', 'assets/captain-marver-char.jpg'),
+                castThumbnail('Character 3', 'assets/the-hobbit-char.jpg'),
               ],
             ),
           ),

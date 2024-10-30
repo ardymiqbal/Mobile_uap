@@ -5,6 +5,9 @@ import 'package:tes1/app/modules/home/controllers/profile_controller.dart';
 class ProfilePage extends StatelessWidget {
   final ProfileController profileController = Get.put(ProfileController());
 
+  // Menghapus kata kunci 'const' dari konstruktor
+  ProfilePage({super.key}); 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +24,7 @@ class ProfilePage extends StatelessWidget {
                   backgroundImage: profileController.profileImage.value != null
                       ? MemoryImage(profileController.profileImage.value!)
                       : null,
-                  backgroundColor: Colors.grey[800], // Mengubah warna background default
+                  backgroundColor: Colors.grey[800],
                   child: profileController.profileImage.value == null
                       ? const Icon(Icons.person, size: 80, color: Colors.white)
                       : null,
@@ -29,12 +32,12 @@ class ProfilePage extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: profileController.pickImage,
-              child: Text(
-                'Pick Profile Image',
-                style: TextStyle(color: Colors.white), // Menambahkan warna pada teks
-              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 255, 152, 0),
+                backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+              ),
+              child: const Text(
+                'Pick Profile Image',
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ],

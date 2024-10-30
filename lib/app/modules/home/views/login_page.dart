@@ -1,67 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/login_controller.dart';
+import 'package:tes1/app/modules/home/controllers/profile_controller.dart';
 
-class LoginPage extends StatelessWidget {
-  final LoginController loginController = Get.put(LoginController());
+class ProfilePage extends StatelessWidget {
+  final ProfileController profileController = Get.put(ProfileController());
+
+  // Menghapus kata kunci 'const' dari konstruktor
+  ProfilePage({Key? key}) : super(key: key); 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/background.jpg"), // Latar belakang
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(height: 50),
-                  Image.asset('assets/logo-film.png', height: 100),
-                  SizedBox(height: 30),
-                  TextField(
-                    onChanged: (value) => loginController.username.value = value,
-                    decoration: InputDecoration(
-                      labelText: 'Username',
-                      filled: true,
-                      fillColor: Colors.black.withOpacity(0.5),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  TextField(
-                    obscureText: true,
-                    onChanged: (value) => loginController.password.value = value,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      filled: true,
-                      fillColor: Colors.black.withOpacity(0.5),
-                    ),
-                  ),
-                  SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      onPressed: loginController.login,
-                      child: Text('Login', style: TextStyle(fontSize: 18)),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text('Forgot Password?', style: TextStyle(color: Colors.white70)),
-                  ),
-                ],
+      appBar: AppBar(
+        backgroundColor: Colors.black87,
+        title: const Text('Profile'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Obx(() => CircleAvatar(
+                  radius: 80,
+                  backgroundImage: profileController.profileImage.value != null
+                      ? MemoryImage(profileController.profileImage.value!)
+                      : null,
+                  backgroundColor: Colors.grey[800],
+                  child: profileController.profileImage.value == null
+                      ? const Icon(Icons.person, size: 80, color: Colors.white)
+                      : null,
+                )),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: profileController.pickImage,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+              ),
+              child: const Text(
+                'Pick Profile Image',
+                style: TextStyle(color: Colors.white),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
