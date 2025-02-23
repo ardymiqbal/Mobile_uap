@@ -3,16 +3,25 @@ import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import 'package:tes1/app/modules/home/views/profile_page.dart';
 import 'package:tes1/app/modules/http_screen/views/http_view.dart';
+import 'package:tes1/app/modules/home/views/search_page.dart';
+import 'package:tes1/app/modules/home/views/movie_review_page.dart';
+import 'package:tes1/app/modules/movies/movies_page.dart';
+import 'package:tes1/app/modules/movies/tv_shows_page.dart';
+import 'package:tes1/app/modules/movies/anime_page.dart';
+import 'package:tes1/app/modules/movies/my_list_page.dart';
+import 'film_detail.dart';
+import 'package:tes1/app/modules/tmdb/tmdb_api.dart';
 
 // Home Page with BottomNavigationBar and various sections
 class HomePage extends StatelessWidget {
   final HomeController homeController = Get.put(HomeController());
+  final TMDBApi tmdbapi = TMDBApi();
 
   final List<Widget> _pages = [
     HomeContent(), // The main home content page
     Center(child: Text('Play Page')), // Placeholder for Play Page
-    Center(child: Text('Search Page')), // Placeholder for Search Page
-    Center(child: Text('Favorites Page')), // Placeholder for Favorites Page
+    SearchPage(), // Placeholder for Search Page
+    MovieReviewPage(), // Placeholder for Favorites Page
     ProfilePage(), // Profile Page with Image Picker
     HttpView(),
   ];
@@ -21,13 +30,21 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black87,
+        backgroundColor: const Color.fromARGB(221, 255, 0, 0),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('WELCOME TO APP STREAMING FILM'),
+            Text(
+              'REELIX FILM',
+              style: TextStyle(
+                fontSize: 18, // Adjust the font size as per your preference
+                fontWeight: FontWeight.bold, // Optional: make the text bold
+                color: Colors.white, // Optional: set text color
+              ),
+            ),
             IconButton(
-              icon: Icon(Icons.notifications),
+              icon: Icon(Icons.notifications,
+                  color: Colors.white), // Optional: set icon color
               onPressed: () {
                 Get.to(() => HttpView());
               },
@@ -35,6 +52,8 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
+
+      // Observe page index and reactively update content
       body: Obx(() =>
           _pages[homeController.currentIndex.value]), // Observe page index
       bottomNavigationBar: Obx(() => BottomNavigationBar(
@@ -53,260 +72,194 @@ class HomePage extends StatelessWidget {
                   icon: Icon(Icons.favorite), label: 'Favorites'),
               BottomNavigationBarItem(
                   icon: Icon(Icons.person), label: 'Profile'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.notifications), label: 'Webview'),
             ],
           )),
     );
   }
 }
 
-// Home Content as a separate widget for better readability
 class HomeContent extends StatelessWidget {
+  final TMDBApi tmdbapi = TMDBApi();
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ListView(
-        children: [
-          // Categories Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              TextButton(onPressed: () {}, child: Text("Movies")),
-              TextButton(onPressed: () {}, child: Text("TV Shows")),
-              TextButton(onPressed: () {}, child: Text("Anime")),
-              TextButton(onPressed: () {}, child: Text("My List")),
-            ],
-          ),
-          SizedBox(height: 20),
-          // Featured Content
-          Container(
-            height: 250,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(
-                    'assets/arcane.jpg'), // Use AssetImage for local asset
-                fit: BoxFit.cover,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  bottom: 16,
-                  left: 16,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Arcane",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "New · Season 1",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 20),
-          // Recent Watched Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Recent Watched',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton(
-                onPressed: () {},
-                child: Text('See all'),
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              movieThumbnail('Captain Marvel', 'assets/captain-marvel.jpg'),
-              movieThumbnail('Joker', 'assets/joker.jpg'),
-              movieThumbnail('The Hobbit', 'assets/hobbit.jpg'),
-            ],
-          ),
-          SizedBox(height: 20),
-          // Continue Watch Section
-          Text(
-            "Continue Watching",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 10),
-          Container(
+    return FutureBuilder(
+      future: Future.wait([
+        tmdbapi.getRecommendedMovies(),
+        tmdbapi.getRecommendedSeries(),
+        tmdbapi.getRecommendedCartoons(),
+      ]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error fetching recommendations'));
+        } else {
+          final movies = (snapshot.data?[0] as List<dynamic>?) ?? [];
+          final series = (snapshot.data?[1] as List<dynamic>?) ?? [];
+          final cartoons = (snapshot.data?[2] as List<dynamic>?) ?? [];
+
+          return Padding(
             padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'S1 : E1 "Jinx Born"',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 10),
-                LinearProgressIndicator(
-                  value: 0.5, // Progress of the video
-                  backgroundColor: Colors.grey,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
-                ),
-                SizedBox(height: 10),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red, // Using backgroundColor
-                    ),
-                    child: Text(
-                      'Continue Watching',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 20),
-          // The Cast Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'The Cast',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton(
-                onPressed: () {},
-                child: Text('See all'),
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Container(
-            height: 100,
             child: ListView(
-              scrollDirection: Axis.horizontal,
               children: [
-                castThumbnail('Joquin Poeniex', 'assets/joker-char.jpg'),
-                castThumbnail('brie larson', 'assets/captain-marver-char.jpg'),
-                castThumbnail('Character 3', 'assets/the-hobbit-char.jpg'),
+                // Categories Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    categoryButton("Movies", () => Get.to(() => MoviesPage())),
+                    categoryButton(
+                        "TV Shows", () => Get.to(() => TVShowsPage())),
+                    categoryButton("Anime", () => Get.to(() => AnimePage())),
+                    categoryButton("My List", () => Get.to(() => MyListPage())),
+                  ],
+                ),
+                SizedBox(height: 20),
+                // Featured Content
+                if (movies.isNotEmpty) featuredContent(movies[0]),
+                SizedBox(height: 20),
+                // Recommended Movies Section
+                categorySection("Recommended Movies", movies),
+                categorySection("Recommended Series", series),
+                categorySection("Recommended Cartoons", cartoons),
               ],
             ),
+          );
+        }
+      },
+    );
+  }
+
+  Widget categorySection(String title, List<dynamic> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        SizedBox(height: 10),
+        Container(
+          height: 200, // Adjust the height to fit the thumbnails
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return movieThumbnail(
+                (item['title'] ?? item['name']) ?? 'Unknown Title',
+                item['poster_path'] != null
+                    ? 'https://image.tmdb.org/t/p/w500${item['poster_path']}'
+                    : 'https://via.placeholder.com/100x150.png?text=No+Image',
+                onTap: () {
+                  Get.to(() => MovieDetailPage(movie: item));
+                },
+              );
+            },
           ),
-          SizedBox(height: 20),
-          // Favorites Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'My Favorites',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+        ),
+        SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget featuredContent(dynamic movie) {
+    return GestureDetector(
+      onTap: () {
+        Get.to(() => MovieDetailPage(movie: movie));
+      },
+      child: Container(
+        height: 250,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(
+              'https://image.tmdb.org/t/p/w500${movie['poster_path']}',
+            ),
+            fit: BoxFit.cover,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              bottom: 16,
+              left: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    movie['title'] ?? 'Unknown Title',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    "Popular · ${movie['release_date'] ?? 'Unknown Date'}",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () {},
-                child: Text('See all'),
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              movieThumbnail('Free Guy', 'assets/free-guy.jpg'),
-              movieThumbnail('Alita', 'assets/alita.jpg'),
-              movieThumbnail('Dune', 'assets/dune.jpg'),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget movieThumbnail(String title, String imageUrl) {
-    return Column(
-      children: [
-        Container(
-          width: 100,
-          height: 150,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(imageUrl), // Use AssetImage for local assets
-              fit: BoxFit.cover,
+  Widget movieThumbnail(String title, String imageUrl,
+      {required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 120,
+        margin: EdgeInsets.only(right: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                imageUrl,
+                width: 120,
+                height: 150,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey,
+                  child:
+                      Icon(Icons.broken_image, size: 50, color: Colors.white),
+                ),
+              ),
             ),
-            borderRadius: BorderRadius.circular(10),
-          ),
+            SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(fontSize: 14, color: Colors.white),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
-        SizedBox(height: 8),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget castThumbnail(String name, String imageUrl) {
-    return Column(
-      children: [
-        Container(
-          margin: EdgeInsets.only(right: 10),
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(imageUrl),
-              fit: BoxFit.cover,
-            ),
-            borderRadius: BorderRadius.circular(40),
-          ),
-        ),
-        SizedBox(height: 8),
-        Text(
-          name,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-        ),
-      ],
+  Widget categoryButton(String title, VoidCallback onPressed) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        backgroundColor: Colors.white.withOpacity(0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Text(
+        title,
+        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }
